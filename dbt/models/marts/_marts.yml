@@ -1,0 +1,79 @@
+version: 2
+
+models:
+
+  - name: dim_employee
+    description: >
+      One row per employee, deduplicated from raw.employees and enriched with
+      department, tenure and activity flags. Grain: employee_id.
+    columns:
+      - name: employee_id
+        description: Natural key. Unique here even though it is NOT unique in the source.
+        tests:
+          - unique          # catches DEFECT-1 if the dedupe in staging regresses
+          - not_null
+      - name: manager_id
+        description: Self-referencing FK. Orphans indicate a hard-deleted manager upstream.
+        tests:
+          - relationships:  # catches DEFECT-2
+              to: ref('dim_employee')
+              field: employee_id
+              config:
+                severity: warn   # warn, not error: an orphan manager is a data
+                                 # hygiene problem, not a reason to block the
+                                 # whole scorecard. Choosing severity per test
+                                 # deliberately is a real dbt skill.
+      - name: dept_name
+        tests:
+          - not_null
+      - name: is_active
+        tests:
+          - not_null
+      - name: is_future_hire
+        description: Accepted offer, start date in the future. Excluded from headcount by definition, not because the row is wrong.
+        tests:
+          - not_null
+      - name: tenure_band
+        tests:
+          - accepted_values:
+              values: ['0-1y', '1-2y', '2-4y', '4y+']
+
+  - name: fct_attendance_daily
+    description: One row per employee per worked day, with hours and a 5-day rolling average.
+    columns:
+      - name: employee_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_employee')
+              field: employee_id
+      - name: hours_worked
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:      # requires dbt_utils; see packages.yml
+              min_value: 0
+              max_value: 24
+    tests:
+      - unique_combination_of_columns:     # defined in tests/generic/
+          combination_of_columns:
+            - employee_id
+            - event_date
+
+  - name: mart_attrition_scorecard
+    description: >
+      THE published report. One row per calendar month with headcount, joiners,
+      leavers, attrition rate and rolling/YTD windows. Grain: month_start.
+    columns:
+      - name: month_start
+        tests:
+          - unique
+          - not_null
+      - name: headcount_eom
+        tests:
+          - not_null
+      - name: attrition_rate_pct
+        description: Leavers / average headcount, as a percentage.
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 100

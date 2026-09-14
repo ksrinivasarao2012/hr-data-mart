@@ -1,0 +1,41 @@
+response_text,gold_themes
+"The pay just didn't keep up with the market. I liked the team a lot.",compensation
+"I was doing the work of two people after the reorg and it never got fixed.",workload
+"My manager was supportive but there was no clear path to the next level.",growth
+"Honestly the culture changed after the new leadership came in.",culture
+"Got an offer with a 40% hike. Hard to say no to that.",compensation
+"No learning happening. Same tickets for eighteen months.",growth
+"Workload was fine, compensation was fine, I just wanted to relocate.",personal
+"Skip-level never happened even once. Felt invisible.",manager
+"Too many late-night escalations, every single week.",workload
+"Manager micromanaged everything, could not make a single decision alone.",manager
+"Great people, great problems, but the salary band was capped.",compensation
+"I wanted to move into a data role and there was no internal mobility.",growth
+"Burnt out. Three consecutive quarters of crunch.",workload
+"Family reasons, moving back to my hometown.",personal
+"The appraisal process felt arbitrary and nobody could explain the rating.",manager
+"Pay was below market and I was also covering two roles.",compensation|workload
+"My manager blocked my promotion twice with no explanation.",manager|growth
+"The hours were brutal and leadership didn't seem to care at all.",workload|culture
+"Salary was fine but the team environment turned toxic after the merger.",culture
+"It was time for a change.",ABSTAIN
+"Personal reasons.",ABSTAIN
+"Not a good fit.",ABSTAIN
+"Moving on to a new opportunity.",ABSTAIN
+"Thanks for everything.",ABSTAIN
+"I got promoted twice in three years but the pay didn't follow the title.",compensation
+"There was no one senior enough to learn from in my team.",growth
+"Constant weekend deployments with no comp off.",workload
+"My skip-level manager was great, my direct manager was not.",manager
+"The company stopped investing in our product line.",culture
+"I asked for a raise three times and got nowhere.",compensation
+"Relocating for my spouse's job.",personal
+"Every decision needed four approvals. Nothing moved.",culture
+"I was hired for one role and doing a completely different one.",workload|growth
+"Zero feedback in eighteen months. I had no idea where I stood.",manager
+"The new RTO policy made my commute three hours a day.",personal
+"Our team lost half its headcount and nobody backfilled.",workload
+"I wanted to do ML work and stayed on reporting dashboards.",growth
+"Leadership said one thing in all-hands and did another.",culture
+"Comp was at the 25th percentile and they knew it.",compensation
+"My manager took credit for my project in front of the VP.",manager

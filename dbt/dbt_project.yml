@@ -1,0 +1,24 @@
+name: 'hr_mart'
+version: '1.0.0'
+config-version: 2
+
+profile: 'hr_mart'
+
+model-paths: ["models"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  hr_mart:
+    staging:
+      +materialized: view      # cheap, always fresh -- staging is just cleanup
+      +schema: staging
+    marts:
+      +materialized: table     # the published numbers -- materialized on purpose
+      +schema: marts

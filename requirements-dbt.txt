@@ -1,0 +1,10 @@
+# ---------------------------------------------------------------------------
+# dbt dependencies.
+# These are installed into their OWN virtualenv (/opt/dbt-venv) inside the
+# Airflow image. Do NOT merge this file with Airflow's dependencies --
+# dbt-core and Airflow pin conflicting versions of jinja2/protobuf and
+# installing them together is the #1 way to lose an evening.
+# ---------------------------------------------------------------------------
+
+dbt-core==1.9.4
+dbt-postgres==1.9.0

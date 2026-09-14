@@ -1,0 +1,36 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Raw HR tables as loaded from upstream systems. Assumed dirty —
+      no test here is expected to pass on every run; these are the
+      early-warning tests that tell us the SOURCE changed shape.
+    schema: raw
+    tables:
+      - name: employees
+        description: One row per employment record. NOT unique per employee — upstream re-inserts on transfer.
+        columns:
+          - name: employee_id
+            tests:
+              - not_null
+      - name: departments
+        columns:
+          - name: dept_id
+            tests:
+              - unique
+              - not_null
+      - name: attendance_events
+        description: Check-in/check-out events. Loads are not idempotent; duplicates occur on job re-runs.
+        columns:
+          - name: event_id
+            tests:
+              - unique
+              - not_null
+      - name: exit_survey_responses
+        description: Free-text exit survey. Unstructured — enriched downstream by the LLM step.
+        columns:
+          - name: response_id
+            tests:
+              - unique
+              - not_null

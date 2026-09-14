@@ -1,0 +1,7 @@
+packages:
+  - package: dbt-labs/dbt_utils
+    version: [">=1.1.0", "<2.0.0"]
+
+# Install with:  dbt deps --project-dir dbt --profiles-dir dbt
+# Must be run BEFORE the first `dbt run`, or the accepted_range tests will
+# fail to compile.

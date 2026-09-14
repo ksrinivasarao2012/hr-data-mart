@@ -1,0 +1,16 @@
+# dbt connection config.
+# Lives inside the dbt/ folder so --profiles-dir and --project-dir are the same path.
+# Values come from environment variables (loaded from .env) with sane local defaults.
+
+hr_mart:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('APP_DB_HOST', 'localhost') }}"
+      port: "{{ env_var('APP_DB_PORT', '5432') | int }}"
+      user: "{{ env_var('APP_DB_USER', 'postgres') }}"
+      password: "{{ env_var('APP_DB_PASSWORD', 'postgres') }}"
+      dbname: "{{ env_var('APP_DB_NAME', 'hr_mart') }}"
+      schema: analytics
+      threads: 4
