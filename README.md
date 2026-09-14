@@ -130,6 +130,29 @@ make sense?" Any recursive CTE walking the chain runs until Postgres kills it.
 - **Status:** documented, not yet fixed. Needs a recursive-CTE cycle-detection
   test.
 
+### Finding 4 — an exclusion rule that hid a real defect
+
+After adding the `is_future_hire` flag and excluding those rows from
+`assert_no_negative_tenure`, the test warned on **1** row where it should have
+warned on 2.
+
+Employee 1130 is a rehire recorded on the original employment row, which pushed
+`join_date` to 2026-10-08 — in the future. So the row satisfied
+`is_future_hire`, and the exclusion written for legitimate future joiners
+silently swallowed a genuinely broken record.
+
+- **Impact:** a known-bad row stopped being reported, with no error anywhere.
+  Worse than never having written the exclusion, because the suite now looked
+  *cleaner* while checking less.
+- **Why it happened:** the exclusion was written against a *symptom* (a future
+  join date) rather than the *condition it meant to exempt* (an accepted offer
+  that has not started). Those overlap, and the difference is exactly the bug.
+- **Fixed:** `where not (is_future_hire and exit_date is null)`. A future join
+  date combined with an exit date is impossible and must always surface.
+- **Generalises to:** every exclusion in a test suite widens the set of things
+  you are no longer checking. That set needs to be as narrow as the exemption
+  you actually intended, and it deserves the same scrutiny as the test itself.
+
 ---
 
 ## Defect handling — four rows, four different remediations

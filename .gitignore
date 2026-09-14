@@ -8,3 +8,4 @@ dbt/dbt_packages/
 dbt/logs/
 logs/
 .DS_Store
+dbt/.user.yml

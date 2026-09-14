@@ -241,31 +241,53 @@ def build_employees():
     #
     # Each of these needs a DIFFERENT remediation, which is the actual point:
     # you cannot write one blanket "fix bad dates" rule.
+    # Each sub-case gets its OWN random count. An earlier version planted
+    # exactly one of each, which meant the surviving-defect count was identical
+    # on every seed — the randomisation looked real but the number the test
+    # reported never moved. Randomising the counts is what makes "the tests
+    # catch categories, not planted rows" an honest claim rather than a slogan.
     leavers_pool = [r for r in rows if r["exit_date"] is not None]
-    victims = random.sample(leavers_pool, 3)
+    n_swap     = random.randint(1, 4)
+    n_rehire   = random.randint(1, 4)
+    n_sentinel = random.randint(1, 3)
+    n_future   = random.randint(1, 3)
+
+    victims = random.sample(leavers_pool, n_swap + n_rehire + n_sentinel)
+    cursor = 0
 
     # 3a. DD/MM vs MM/DD swap by an HR admin typing into the wrong locale.
     #     Remediation: correctable — the true date is recoverable by swapping.
-    victims[0]["exit_date"] = victims[0]["join_date"] - timedelta(days=17)
+    #     Gap is deliberately small (under a month) so that a month-based
+    #     tenure check rounds it to zero and misses it. See README, Finding 1.
+    for v in victims[cursor:cursor + n_swap]:
+        v["exit_date"] = v["join_date"] - timedelta(days=random.randint(3, 27))
+    cursor += n_swap
 
     # 3b. Rehire recorded against the ORIGINAL row instead of a new one, so the
     #     join_date jumped forward past the old exit_date.
     #     Remediation: needs a second employment record, not a date edit.
-    victims[1]["join_date"] = victims[1]["exit_date"] + timedelta(days=200)
+    for v in victims[cursor:cursor + n_rehire]:
+        v["join_date"] = v["exit_date"] + timedelta(days=random.randint(120, 400))
+    cursor += n_rehire
 
     # 3c. Exit date defaulted to 1900-01-01 by an upstream system that writes a
     #     sentinel instead of NULL. The classic "magic date" bug.
     #     Remediation: map the sentinel to NULL at the staging layer.
-    victims[2]["exit_date"] = date(1900, 1, 1)
+    for v in victims[cursor:cursor + n_sentinel]:
+        v["exit_date"] = date(1900, 1, 1)
 
     # 3d. Future-dated join: an offer accepted but not yet started, loaded into
     #     the active-employee table. Inflates headcount for people who have not
     #     turned up yet.
     #     Remediation: filter join_date > today out of headcount, but keep the
     #     row — HR genuinely needs to see the pipeline.
-    future_hire = random.choice([r for r in rows if r["exit_date"] is None])
-    future_hire["join_date"] = HISTORY_END + timedelta(days=45)
-    DEFECT_LOG.append("DEFECT-3: 4 impossible-date rows (3a/3b/3c/3d)")
+    for v in random.sample([r for r in rows if r["exit_date"] is None], n_future):
+        v["join_date"] = HISTORY_END + timedelta(days=random.randint(10, 90))
+
+    DEFECT_LOG.append(
+        f"DEFECT-3: {n_swap} date-swap, {n_rehire} rehire, "
+        f"{n_sentinel} sentinel, {n_future} future-joiner"
+    )
 
     # ================= HIDDEN-B ==============================================
     # NOT announced at runtime. Passes every test currently in the project.
