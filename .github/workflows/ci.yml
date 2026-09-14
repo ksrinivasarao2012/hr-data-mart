@@ -1,0 +1,96 @@
+name: dbt CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hr_mart
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      APP_DB_HOST: localhost
+      APP_DB_PORT: "5432"
+      APP_DB_USER: postgres
+      APP_DB_PASSWORD: postgres
+      APP_DB_NAME: hr_mart
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: dbt deps
+        run: dbt deps --project-dir dbt --profiles-dir dbt
+
+      - name: Verify database connection
+        run: dbt debug --project-dir dbt --profiles-dir dbt
+
+      - name: Generate randomised HR dataset
+        run: python scripts/seed_data.py
+
+      - name: Build models
+        run: dbt run --project-dir dbt --profiles-dir dbt
+
+      - name: Run data quality tests
+        run: dbt test --project-dir dbt --profiles-dir dbt
+
+      - name: Show the published scorecard
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d hr_mart -c "
+            select month_label, headcount_bom, joiners, leavers,
+                   headcount_eom, attrition_rate_pct, attrition_rate_3mo_rolling
+            from analytics_marts.mart_attrition_scorecard
+            order by month_start desc limit 12;"
+
+      - name: Generate dbt docs
+        run: dbt docs generate --project-dir dbt --profiles-dir dbt
+
+      - name: Upload docs artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dbt/target
+
+  deploy-docs:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
