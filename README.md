@@ -81,6 +81,20 @@ flowchart TB
 **The arrow that matters is `GATE → HALT`.** Everything upstream computes
 numbers. That one edge decides whether anyone is allowed to see them.
 
+### Generated lineage
+
+dbt derives this from the `ref()` calls in the SQL — nobody draws it by hand.
+Explore it interactively in the
+**[hosted docs](https://ksrinivasarao2012.github.io/hr-data-mart/)**.
+
+![dbt lineage graph](docs/lineage.png)
+
+One thing the graph cannot tell you: `assert_headcount_reconciles` is shown
+guarding `mart_attrition_scorecard`, and it is correctly wired up — but
+[Finding 2](#finding-2--a-reconciliation-test-that-cannot-fail) explains why
+that test cannot actually fail. Lineage proves a test *exists*. Only reading the
+SQL tells you whether it *checks* anything.
+
 `run_pipeline.py` orchestrates this locally; `.github/workflows/ci.yml` runs it
 in CI. `dags/hr_mart_daily.py` is the equivalent Airflow DAG — see
 *Honest scope*.
